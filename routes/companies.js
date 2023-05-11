@@ -26,13 +26,14 @@ const router = new express.Router();
  */
 
 router.post("/", ensureAdmin, async function (req, res, next) {
+  debugger
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
-
+    
     const company = await Company.create(req.body);
     return res.status(201).json({ company });
   } catch (err) {
@@ -55,7 +56,7 @@ router.get("/", async function (req, res, next) {
   const q = req.query;
   if (q.minEmployees) q.minEmployees = +q.minEmployees;
   if (q.maxEmployees) q.maxEmployees = +q.maxEmployees;
-
+  
   try {
     const validator = jsonschema.validate(q, companyFilterSchema);
     if(!validator.valid) {
