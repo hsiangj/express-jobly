@@ -96,6 +96,49 @@ describe("GET /companies", function () {
     });
   });
 
+  test("works: filtering by single filter", async() => {
+    const resp = await request(app).get("/companies").query({name: 'C3'});
+    expect(resp.statusCode).toBe(200);
+    expect(resp.body).toEqual({"companies": 
+    [{
+      handle: "c3",
+      name: "C3",
+      description: "Desc3",
+      numEmployees: 3,
+      logoUrl: "http://c3.img",
+    }]});
+  })
+
+  test("works: filtering by all options", async() => {
+    const resp = await request(app).get("/companies").query({name: 'c', minEmployees: 2, maxEmployees: 3});
+    expect(resp.statusCode).toBe(200);
+    expect(resp.body).toEqual({"companies":[ 
+    {
+      handle: "c2",
+      name: "C2",
+      description: "Desc2",
+      numEmployees: 2,
+      logoUrl: "http://c2.img",
+    },
+    {
+      handle: "c3",
+      name: "C3",
+      description: "Desc3",
+      numEmployees: 3,
+      logoUrl: "http://c3.img",
+    }]});
+  });
+
+  test("respond with error 400 if invalid filter word is used", async() => {
+    const resp = await request(app).get("/companies").query({test: "hello", maxEmployees:3});
+    expect(resp.statusCode).toBe(400);
+  });
+
+  test("respond with error 400 if minEmployees > maxEmployees", async() => {
+    const resp = await request(app).get("/companies").query({minEmployees: 3, maxEmployees:1});
+    expect(resp.statusCode).toBe(400);
+  });
+
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---
     // thus making it hard to test that the error-handler works with it. This

@@ -85,6 +85,71 @@ describe("findAll", function () {
       },
     ]);
   });
+  test("works: with a name filter", async function (){
+    let companies = await Company.findAll({name: 'C3'});
+    expect(companies).toEqual(
+      [{
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img"
+      }]
+    )
+  });
+  test("works: with a minEmployees filter", async function (){
+    let companies = await Company.findAll({minEmployees: 3});
+    expect(companies).toEqual(
+      [{
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img"
+      }]
+    )
+  });
+  test("works: with a maxEmployees filter", async function (){
+    let companies = await Company.findAll({maxEmployees: 1});
+    expect(companies).toEqual(
+      [{
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img"
+      }]
+    )
+  });
+  test("works: with all filter", async function (){
+    let companies = await Company.findAll({name: 'c', minEmployees: 2, maxEmployees: 3});
+    expect(companies).toEqual(
+      [{
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      },
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      }]
+    )
+  });
+
+  test("respond with empty list if company not found", async function (){
+    let companies = await Company.findAll({name: 'false'});
+    expect(companies).toEqual([]);
+  });
+
+  test("respond with error when minEmployees > maxEmployees", async function (){
+    await expect(Company.findAll({minEmployees: 3, maxEmployees: 1})).rejects.toThrow(BadRequestError);
+   
+  });
 });
 
 /************************************** get */
