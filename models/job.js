@@ -27,16 +27,49 @@ class Job {
 
   /** Find all jobs.
    *
+   *   searchFilters (all optional):
+   * - minSalary
+   * - hasEquity (true returns only jobs with equity > 0, other values ignored)
+   * - title (will find case-insensitive, partial matches)
+   *
    * Returns [{ id, title, salary, equity, companyHandle }, ...]
    * */
-  static async findAll() {
-    const result = await db.query(
-      `SELECT id, 
+  static async findAll(filterSearch={}) {
+    let baseQuery = `
+      SELECT id, 
       title, 
       salary, 
       equity, 
       company_handle AS "companyHandle" 
-      FROM jobs;`)
+      FROM jobs`;
+    
+    const whereStatements = [];
+    const values = [];
+
+    const {minSalary, hasEquity, title} = filterSearch;
+
+    // For each possible search term, add to whereExpressions and
+    // queryValues so we can generate the right SQL
+
+    if (minSalary) {
+      values.push(minSalary);
+      whereStatements.push(`salary >= $${values.length}`);
+    }
+
+    if (title) {
+      values.push(`%${title}%`);
+      whereStatements.push(`title ILIKE $${values.length}`);
+    }
+
+    if (hasEquity === true) {
+      whereStatements.push(`equity > 0`)
+    }
+
+    if (whereStatements.length > 0) {
+      baseQuery += ` WHERE (${whereStatements.join(' AND ')})`
+    }
+
+    const result = await db.query(baseQuery, values);
     
     return result.rows;
   }

@@ -104,6 +104,37 @@ describe("GET /jobs", function() {
     ]
   })
   });
+
+  test("works: filtering by single filter", async function() {
+    const resp = await request(app).get("/jobs").query({title: "1"});
+    expect(resp.statusCode).toBe(200);
+    expect(resp.body).toEqual({jobs:
+    [{ 
+      id: testJobIds[0],
+      title: "J1", 
+      salary: 1, 
+      equity: "0.1", 
+      companyHandle: "c1" 
+      }]})
+  });
+
+  test("works: filtering by all options", async function() {
+    const resp = await request(app).get("/jobs").query({title: "j", minSalary: 2, hasEquity: true });
+    expect(resp.statusCode).toBe(200);
+    expect(resp.body).toEqual({jobs:
+      [{ 
+        id: testJobIds[1],
+        title: "J2", 
+        salary: 2, 
+        equity: "0.2", 
+        companyHandle: "c1" 
+      }]})
+  });
+
+  test('bad request error if invalid filter key', async function() {
+    const resp = await request(app).get("/jobs").query({test: "test", hasEquity: true});
+    expect(resp.statusCode).toBe(400);
+  })
 })
 
 /************************************** GET /jobs/:id */

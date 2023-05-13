@@ -9,7 +9,7 @@ const Job = require("../models/job");
 
 const jobNewSchema = require("../schemas/jobNew.json");
 const jobUpdateSchema = require("../schemas/jobUpdate.json");
-// const companyFilterSchema = require("../schemas/companyFilter.json");
+const jobFilterSchema = require("../schemas/jobFilter.json");
 
 const router = new express.Router();
 
@@ -50,8 +50,19 @@ router.post("/", ensureAdmin, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
+  const q = req.query;
+  if (q.minSalary) q.minSalary = +q.minSalary;
+  //the identity operator (===) will set q.hasEquity to a boolean true if the string is "true" and boolean false if it is string "false" or not set at all.
+  q.hasEquity = q.hasEquity === 'true';
+  
   try {
-    const jobs = await Job.findAll();
+    const validator = jsonschema.validate(q, jobFilterSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
+
+    const jobs = await Job.findAll(q);
     return res.json({jobs});
   } catch (e) {
     return next(e); 
