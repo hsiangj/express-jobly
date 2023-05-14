@@ -17,9 +17,7 @@ const router = express.Router();
 
 /** POST / { user }  => { user, token }
  *
- * Adds a new user. This is not the registration endpoint --- instead, this is
- * only for admin users to add new users. The new user being added can be an
- * admin.
+ * Adds a new user. This is not the registration endpoint --- instead, this is only for admin users to add new users. The new user being added can be an admin.
  *
  * This returns the newly created user and an authentication token for them:
  *  {user: { username, firstName, lastName, email, isAdmin }, token }
@@ -65,7 +63,7 @@ router.get("/", ensureAdmin, async function (req, res, next) {
  *
  * Returns { username, firstName, lastName, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: admin or user same as :username
  **/
 
 router.get("/:username", ensureAdminOrCorrectUser, async function (req, res, next) {
@@ -85,7 +83,7 @@ router.get("/:username", ensureAdminOrCorrectUser, async function (req, res, nex
  *
  * Returns { username, firstName, lastName, email, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: admin or user same as :username
  **/
 
 router.patch("/:username", ensureAdminOrCorrectUser, async function (req, res, next) {
@@ -106,7 +104,7 @@ router.patch("/:username", ensureAdminOrCorrectUser, async function (req, res, n
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login
+ * Authorization required: admin or user same as :username
  **/
 
 router.delete("/:username", ensureAdminOrCorrectUser, async function (req, res, next) {
@@ -117,6 +115,27 @@ router.delete("/:username", ensureAdminOrCorrectUser, async function (req, res, 
     return next(err);
   }
 });
+
+
+
+/** POST /[username]/jobs/[id]  
+ * 
+ * Returns {"applied": jobId}
+ *
+ * Authorization required: admin or user same as :username 
+ **/
+
+router.post("/:username/jobs/:id", ensureAdminOrCorrectUser, async function (req, res, next) {
+  try {
+    const {username, id } = req.params;
+    await User.apply(username, id);
+    return res.status(201).json({applied: +id})
+
+  } catch (err) {
+    return next(err);
+  }
+})
+
 
 
 module.exports = router;

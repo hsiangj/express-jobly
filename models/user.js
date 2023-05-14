@@ -117,7 +117,7 @@ class User {
 
   /** Given a username, return data about user.
    *
-   * Returns { username, first_name, last_name, is_admin, jobs }
+   * Returns { username, first_name, last_name, is_admin, jobsApplied }
    *   where jobs is { id, title, company_handle, company_name, state }
    *
    * Throws NotFoundError if user not found.
@@ -138,10 +138,21 @@ class User {
     const user = userRes.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+    
+    const jobsAppliedRes = await db.query(
+            `SELECT job_id
+            FROM applications
+            WHERE username = $1`,
+            [username]
+    )
+
+    const jobsApplied = jobsAppliedRes.rows;
+    user.jobsApplied = jobsApplied.map(job => job.job_id);
 
     return user;
   }
 
+  
   /** Update user data with `data`.
    *
    * This is a "partial update" --- it's fine if data doesn't contain
@@ -203,6 +214,50 @@ class User {
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+  }
+
+  /** Insert job applied into database for specific user. 
+   * Returns undefined.
+   * 
+   * - username: username applying for job
+   * - jobID: job id
+  */
+
+  static async apply(username, jobID) {
+    const usernameCheck = await db.query(
+      `SELECT username 
+      FROM users 
+      WHERE username = $1`,
+      [username]
+    );
+
+    if (!usernameCheck.rows[0]) throw new NotFoundError(`No user: ${username}`)
+
+    const jobIDCheck = await db.query(
+      `SELECT id 
+      FROM jobs
+      WHERE id = $1`,
+      [jobID]
+    );
+
+    if (!jobIDCheck.rows[0]) throw new NotFoundError(`No job: ${jobID}`)
+
+    const duplicateCheck = await db.query(
+      `SELECT username
+       FROM applications
+       WHERE username = $1 
+       AND job_id = $2`,
+      [username, jobID]
+    );
+
+    if (duplicateCheck.rows[0]) {
+      throw new BadRequestError(`Duplicate application id: ${jobID}`);
+    }
+   await db.query(
+      `INSERT INTO applications 
+      (username, job_id)
+      VALUES ($1, $2)`
+      [username, jobID]);
   }
 }
 
