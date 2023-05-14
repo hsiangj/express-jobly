@@ -61,6 +61,9 @@ class Company {
     
     const {name, minEmployees, maxEmployees} = filterSearch;
     
+    // For each possible search term, add to whereExpressions and
+    // queryValues so we can generate the right SQL
+
     if (minEmployees > maxEmployees) throw new BadRequestError('Minimum number of employees cannot be greater than value of maximum number of employees');
 
     if (name) {
@@ -81,6 +84,8 @@ class Company {
     if (whereStatements.length > 0){
       baseQuery += ` WHERE ${whereStatements.join(' AND ')}`
     }
+
+    // Finalize query and return results
 
     baseQuery += ` ORDER BY name`
 
@@ -110,6 +115,18 @@ class Company {
     const company = companyRes.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+
+    const jobRes = await db.query(
+            `SELECT id,
+                    title,
+                    salary,
+                    equity
+            FROM jobs 
+            WHERE company_handle = $1`,
+            [handle]);
+    
+    const jobs = jobRes.rows;
+    company.jobs = jobs;
 
     return company;
   }
