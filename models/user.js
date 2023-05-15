@@ -223,7 +223,8 @@ class User {
    * - jobID: job id
   */
 
-  static async apply(username, jobID) {
+  static async applyToJob(username, jobID) {
+    
     const usernameCheck = await db.query(
       `SELECT username 
       FROM users 
@@ -249,15 +250,16 @@ class User {
        AND job_id = $2`,
       [username, jobID]
     );
-
+    
     if (duplicateCheck.rows[0]) {
       throw new BadRequestError(`Duplicate application id: ${jobID}`);
     }
-   await db.query(
-      `INSERT INTO applications 
-      (username, job_id)
-      VALUES ($1, $2)`
+    
+    await db.query(
+      `INSERT INTO applications (username, job_id)
+      VALUES ($1, $2)`,
       [username, jobID]);
+    
   }
 }
 
