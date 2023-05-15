@@ -127,10 +127,9 @@ router.delete("/:username", ensureAdminOrCorrectUser, async function (req, res, 
 
 router.post("/:username/jobs/:id", ensureAdminOrCorrectUser, async function (req, res, next) {
   try {
-    const {username, id } = req.params;
-    await User.apply(username, id);
-    return res.status(201).json({applied: +id})
-
+    const jobID = +req.params.id;
+    await User.applyToJob(req.params.username, jobID);
+    return res.status(201).json({applied: jobID});
   } catch (err) {
     return next(err);
   }
