@@ -22,7 +22,7 @@ describe("create", function () {
     title: "new job",
     salary: 60000,
     equity: "0",
-    company_handle: "c1"
+    companyHandle: "c1"
   };
 
   test("works: create a job", async function () {
