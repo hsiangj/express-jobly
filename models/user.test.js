@@ -12,6 +12,7 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  testJobIds,
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -140,6 +141,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobsApplied: [testJobIds[0]]
     });
   });
 
@@ -228,3 +230,44 @@ describe("remove", function () {
     }
   });
 });
+
+/************************************** applyToJob */
+
+describe("applyToJob", function () {
+  test("works", async function () {
+    await User.applyToJob("u1", testJobIds[1]);
+    const resUser = await db.query("SELECT * FROM applications WHERE username = 'u1'");
+    expect(resUser.rows.length).toEqual(2);
+    const resID = await db.query("SELECT * FROM applications WHERE job_id = $1", [testJobIds[1]]);
+    expect(resID.rows[0]).toEqual({
+      job_id: testJobIds[1],
+      username: "u1"
+    })
+  });
+
+  test("not found error if no such job", async function () {
+    try {
+      await User.applyToJob("u1", 999);
+    } catch(e) {
+      expect(e instanceof NotFoundError).toBeTruthy();
+    } 
+  });
+
+  test("not found error if no such user", async function () {
+    try {
+      await User.applyToJob("test", testJobIds[1]);
+    } catch(e) {
+      expect(e.status).toBe(404);
+    }
+  });
+
+  test("bad request error if username job_id combo already exists in db", async function () {
+    try {
+      await User.applyToJob("u1", testJobIds[0]);
+    } catch(e) {
+      expect(e.status).toBe(400);
+      expect(e instanceof BadRequestError).toBeTruthy();
+    }
+  });
+
+})
