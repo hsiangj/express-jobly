@@ -40,8 +40,8 @@ async function commonBeforeAll() {
                ('j3', null, null, 'c1')
         RETURNING id`);
   testJobIds.splice(0,0,...jobsRes.rows.map(r => r.id)); 
-  // testJobIds = jobRes.rows.map(r => r.id);
-
+  // testJobIds = jobsRes.rows.map(r => r.id); //set global variable to testJobIds;
+  // console.log(testJobIds[0])
   await db.query(`
         INSERT INTO applications(username, job_id)
         VALUES ('u1', ${testJobIds[0]})`)
